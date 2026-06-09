@@ -1,570 +1,643 @@
 import streamlit as st
 
-# ─── 페이지 설정 ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="🌟 MBTI 직업 탐험대",
-    page_icon="🔮",
-    layout="wide",
+    page_title="🌟 나의 직업 유형 테스트",
+    page_icon="🧸",
+    layout="centered",
     initial_sidebar_state="collapsed",
 )
 
-# ─── MBTI 데이터 ───────────────────────────────────────────────────────────────
-MBTI_DATA = {
-    "INTJ": {
-        "emoji": "🦉",
-        "nickname": "전략가",
-        "color": "#4A00E0",
-        "light": "#e8e0ff",
-        "desc": "논리적이고 독립적인 전략 설계자",
-        "jobs": [
-            {"title": "데이터 과학자", "emoji": "📊", "desc": "빅데이터를 분석해 인사이트를 도출합니다", "salary": "★★★★★"},
-            {"title": "전략 컨설턴트", "emoji": "♟️", "desc": "기업의 장기 전략을 수립하고 실행합니다", "salary": "★★★★★"},
-            {"title": "AI 연구원", "emoji": "🤖", "desc": "인공지능 알고리즘을 연구 개발합니다", "salary": "★★★★★"},
-            {"title": "보안 전문가", "emoji": "🔐", "desc": "사이버 위협을 분석하고 방어합니다", "salary": "★★★★☆"},
-            {"title": "건축가", "emoji": "🏛️", "desc": "공간과 구조를 체계적으로 설계합니다", "salary": "★★★★☆"},
+# ──────────────────────────────────────────────
+# 데이터: 질문 (7개)
+# 각 보기에 직업 유형별 점수 부여
+# 유형: creator / helper / analyst / leader /
+#       artist / scientist / adventurer / builder /
+#       performer / counselor / techie / nature
+# ──────────────────────────────────────────────
+QUESTIONS = [
+    {
+        "q": "주말 오후, 내가 가장 하고 싶은 건?",
+        "emoji": "🌤️",
+        "choices": [
+            ("유튜브 영상이나 블로그 글 만들기 ✏️",        {"creator":3, "artist":2, "performer":1}),
+            ("친구나 가족 고민 들어주고 조언하기 💬",       {"helper":3, "counselor":2, "leader":1}),
+            ("퍼즐, 코딩, 수학 문제 풀기 🧩",              {"analyst":3, "techie":2, "scientist":2}),
+            ("밖에 나가서 새로운 곳 탐험하기 🗺️",          {"adventurer":3, "nature":2, "builder":1}),
         ],
     },
-    "INTP": {
-        "emoji": "🧪",
-        "nickname": "논리학자",
-        "color": "#0072ff",
-        "light": "#d6eaff",
-        "desc": "창의적인 발명가, 지식에 목마른 사상가",
-        "jobs": [
-            {"title": "소프트웨어 엔지니어", "emoji": "💻", "desc": "복잡한 문제를 코드로 해결합니다", "salary": "★★★★★"},
-            {"title": "철학자·윤리학자", "emoji": "🤔", "desc": "사회의 근본 질문을 탐구합니다", "salary": "★★★☆☆"},
-            {"title": "물리학자", "emoji": "⚛️", "desc": "우주의 법칙을 수식으로 풀어냅니다", "salary": "★★★★☆"},
-            {"title": "게임 개발자", "emoji": "🎮", "desc": "창의적인 세계관을 게임으로 구현합니다", "salary": "★★★★☆"},
-            {"title": "경제학자", "emoji": "📈", "desc": "경제 현상을 분석하고 예측합니다", "salary": "★★★★☆"},
+    {
+        "q": "모둠 프로젝트를 할 때 나는 주로?",
+        "emoji": "🤝",
+        "choices": [
+            ("아이디어 뱅크! 기발한 아이디어 마구 냄 💡",   {"creator":3, "artist":2, "adventurer":1}),
+            ("팀장 역할, 일 분배하고 이끌어 감 📋",         {"leader":3, "builder":2, "analyst":1}),
+            ("자료 조사하고 꼼꼼하게 정리함 🔍",            {"analyst":3, "scientist":2, "techie":2}),
+            ("분위기 메이커, 모두 즐겁게 만듦 🎉",          {"performer":3, "helper":2, "counselor":1}),
         ],
     },
-    "ENTJ": {
+    {
+        "q": "내가 가장 뿌듯함을 느끼는 순간은?",
+        "emoji": "🏅",
+        "choices": [
+            ("내가 만든 결과물을 사람들이 좋아할 때 🎨",    {"creator":3, "artist":3, "performer":1}),
+            ("누군가의 문제를 내가 해결해줬을 때 🌱",       {"helper":3, "counselor":3, "leader":1}),
+            ("어려운 문제를 끝까지 혼자 풀었을 때 🧠",      {"analyst":3, "scientist":3, "techie":2}),
+            ("몸으로 직접 뭔가를 만들거나 완성했을 때 🔨",  {"builder":3, "nature":2, "adventurer":2}),
+        ],
+    },
+    {
+        "q": "친구들이 나에 대해 자주 하는 말은?",
+        "emoji": "💬",
+        "choices": [
+            ("\"너 진짜 창의적이다!\" 🌈",                 {"creator":3, "artist":2, "performer":2}),
+            ("\"네가 있으면 든든해\" 🛡️",                  {"leader":3, "helper":2, "builder":2}),
+            ("\"진짜 꼼꼼하고 정확해\" 📏",                {"analyst":3, "scientist":2, "techie":2}),
+            ("\"넌 왜 이렇게 공감을 잘해?\" 🫂",           {"counselor":3, "helper":3, "performer":1}),
+        ],
+    },
+    {
+        "q": "좋아하는 TV 프로그램 / 유튜브 장르는?",
+        "emoji": "📺",
+        "choices": [
+            ("요리, 공예, 그림 그리기 등 만들기 콘텐츠 🍳", {"artist":3, "creator":2, "builder":2}),
+            ("과학, 우주, 역사 다큐 🔭",                   {"scientist":3, "analyst":2, "nature":2}),
+            ("여행 브이로그, 탐험, 스포츠 🏄",              {"adventurer":3, "nature":2, "performer":1}),
+            ("토크쇼, 예능, 드라마 🎭",                    {"performer":3, "counselor":2, "creator":1}),
+        ],
+    },
+    {
+        "q": "10년 뒤 내 모습, 가장 끌리는 건?",
+        "emoji": "🔮",
+        "choices": [
+            ("내 이름을 건 브랜드·채널을 운영 중 🚀",       {"creator":3, "leader":2, "performer":2}),
+            ("사람들을 돕는 전문직으로 일하는 중 💼",        {"helper":3, "counselor":3, "leader":1}),
+            ("첨단 기술·연구 분야에서 활약 중 🤖",          {"techie":3, "scientist":3, "analyst":2}),
+            ("자연·동물과 함께, 또는 해외 어딘가에서 일 중 🌿", {"nature":3, "adventurer":3, "builder":1}),
+        ],
+    },
+    {
+        "q": "스트레스 받을 때 나만의 해소법은?",
+        "emoji": "💆",
+        "choices": [
+            ("그림 그리기, 글쓰기, 음악 듣기 🎵",           {"artist":3, "creator":2, "counselor":1}),
+            ("운동하거나 밖에 나가서 몸 쓰기 🏃",           {"adventurer":3, "nature":2, "builder":2}),
+            ("게임, 코딩, 퍼즐 같은 두뇌 활동 🎮",          {"techie":3, "analyst":2, "scientist":1}),
+            ("친구 만나거나 수다 떨기 🧋",                  {"performer":3, "helper":2, "counselor":2}),
+        ],
+    },
+]
+
+# ──────────────────────────────────────────────
+# 결과 유형 (12가지)
+# ──────────────────────────────────────────────
+RESULTS = {
+    "creator": {
+        "title": "🎬 크리에이터형",
+        "sub": "세상을 내 콘텐츠로 물들이는 아이디어 메이커!",
+        "color": "#FF6B9D",
+        "bg": "#fff0f6",
+        "emoji": "🎬",
+        "desc": "새로운 것을 만들고 표현하는 걸 좋아하는 당신! 유튜버, 작가, 마케터처럼 '나만의 것'을 세상에 내놓는 직업이 딱이에요.",
+        "jobs": ["📹 유튜버·크리에이터", "✍️ 작가·웹툰 작가", "📣 마케터·브랜드 디자이너", "🎙️ 방송 PD·기자", "📱 SNS 매니저"],
+        "study": ["국어·문학", "미디어·영상", "광고·홍보학"],
+    },
+    "helper": {
+        "title": "🌻 헬퍼형",
+        "sub": "누군가의 든든한 버팀목이 되어주는 따뜻한 사람!",
+        "color": "#FFB347",
+        "bg": "#fff8ed",
+        "emoji": "🌻",
+        "desc": "다른 사람을 돕는 데서 보람을 느끼는 당신! 사람과 함께하는 서비스·복지·교육 분야에서 빛을 발해요.",
+        "jobs": ["🏫 교사·교육 전문가", "🏥 간호사·의료 복지사", "🤝 사회복지사", "✈️ 항공 승무원", "🌍 NGO 활동가"],
+        "study": ["교육학", "사회복지학", "간호·보건학"],
+    },
+    "analyst": {
+        "title": "🔍 분석가형",
+        "sub": "숫자와 데이터 속에서 진실을 찾아내는 두뇌파!",
+        "color": "#6C63FF",
+        "bg": "#f0efff",
+        "emoji": "🔍",
+        "desc": "논리적으로 생각하고 꼼꼼하게 분석하는 게 강점인 당신! 데이터·금융·경영 분야에서 두각을 나타낼 거예요.",
+        "jobs": ["📊 데이터 분석가", "💹 금융 애널리스트", "🧾 회계사·세무사", "📋 경영 컨설턴트", "🔎 시장조사 전문가"],
+        "study": ["경영·경제학", "통계학", "수학·데이터사이언스"],
+    },
+    "leader": {
+        "title": "👑 리더형",
+        "sub": "사람들을 이끌고 큰 그림을 그리는 타고난 리더!",
+        "color": "#E74C3C",
+        "bg": "#fff0ef",
         "emoji": "👑",
-        "nickname": "통솔자",
-        "color": "#c0392b",
-        "light": "#ffe0de",
-        "desc": "대담하고 상상력 넘치는 강인한 리더",
-        "jobs": [
-            {"title": "CEO·창업가", "emoji": "🚀", "desc": "조직을 이끌며 비전을 실현합니다", "salary": "★★★★★"},
-            {"title": "변호사", "emoji": "⚖️", "desc": "논리와 설득으로 정의를 추구합니다", "salary": "★★★★★"},
-            {"title": "정치인", "emoji": "🏛️", "desc": "사회 변화를 이끄는 리더십을 발휘합니다", "salary": "★★★★☆"},
-            {"title": "금융 매니저", "emoji": "💰", "desc": "대규모 자산을 전략적으로 운용합니다", "salary": "★★★★★"},
-            {"title": "프로젝트 매니저", "emoji": "📋", "desc": "팀을 조율해 목표를 달성합니다", "salary": "★★★★☆"},
-        ],
+        "desc": "목표를 정하고 사람들을 이끌어가는 능력이 탁월한 당신! 경영·정치·법조 분야에서 큰 일을 해낼 거예요.",
+        "jobs": ["🏢 기업 CEO·임원", "⚖️ 변호사·판사", "🏛️ 공무원·정치인", "📋 프로젝트 매니저", "🎖️ 장교·소방관"],
+        "study": ["경영학", "법학", "행정학"],
     },
-    "ENTP": {
-        "emoji": "🔥",
-        "nickname": "변론가",
-        "color": "#f39c12",
-        "light": "#fff3cd",
-        "desc": "아이디어가 넘치는 토론의 달인",
-        "jobs": [
-            {"title": "스타트업 창업가", "emoji": "💡", "desc": "혁신적인 아이디어로 시장을 바꿉니다", "salary": "★★★★★"},
-            {"title": "마케팅 디렉터", "emoji": "📣", "desc": "창의적인 전략으로 브랜드를 키웁니다", "salary": "★★★★☆"},
-            {"title": "변리사", "emoji": "📝", "desc": "발명과 지식재산을 법적으로 보호합니다", "salary": "★★★★★"},
-            {"title": "저널리스트", "emoji": "📰", "desc": "세상의 이슈를 날카롭게 보도합니다", "salary": "★★★☆☆"},
-            {"title": "PD·크리에이터", "emoji": "🎬", "desc": "독창적인 콘텐츠로 대중을 사로잡습니다", "salary": "★★★★☆"},
-        ],
-    },
-    "INFJ": {
-        "emoji": "🌙",
-        "nickname": "옹호자",
-        "color": "#6c3483",
-        "light": "#f0e6ff",
-        "desc": "신비롭고 이상적인 꿈을 가진 조력자",
-        "jobs": [
-            {"title": "심리상담사", "emoji": "💜", "desc": "마음의 상처를 치유하고 성장을 돕습니다", "salary": "★★★★☆"},
-            {"title": "작가·소설가", "emoji": "✍️", "desc": "깊은 통찰을 이야기로 표현합니다", "salary": "★★★☆☆"},
-            {"title": "사회복지사", "emoji": "🤝", "desc": "사회적 약자를 위한 실질적 지원을 합니다", "salary": "★★★☆☆"},
-            {"title": "인문학 교수", "emoji": "📚", "desc": "인간과 사회에 대한 깊은 이해를 가르칩니다", "salary": "★★★★☆"},
-            {"title": "NGO 활동가", "emoji": "🌍", "desc": "세상을 더 나은 곳으로 만들기 위해 일합니다", "salary": "★★★☆☆"},
-        ],
-    },
-    "INFP": {
-        "emoji": "🌈",
-        "nickname": "중재자",
-        "color": "#1abc9c",
-        "light": "#d5f5ef",
-        "desc": "시적 감수성을 가진 이상주의자",
-        "jobs": [
-            {"title": "예술가·화가", "emoji": "🎨", "desc": "감정과 상상을 예술로 표현합니다", "salary": "★★★☆☆"},
-            {"title": "UX 디자이너", "emoji": "✨", "desc": "사용자 경험을 아름답게 디자인합니다", "salary": "★★★★★"},
-            {"title": "음악가", "emoji": "🎵", "desc": "감정을 음악이라는 언어로 전달합니다", "salary": "★★★☆☆"},
-            {"title": "환경 활동가", "emoji": "🌿", "desc": "지구와 자연을 위해 목소리를 높입니다", "salary": "★★★☆☆"},
-            {"title": "도서관 사서", "emoji": "📖", "desc": "지식의 보고를 정리하고 연결합니다", "salary": "★★★☆☆"},
-        ],
-    },
-    "ENFJ": {
-        "emoji": "☀️",
-        "nickname": "선도자",
-        "color": "#e74c3c",
-        "light": "#fde8e8",
-        "desc": "카리스마 넘치는 영감을 주는 리더",
-        "jobs": [
-            {"title": "교사·강사", "emoji": "🏫", "desc": "학생들의 잠재력을 이끌어냅니다", "salary": "★★★☆☆"},
-            {"title": "인사 관리자", "emoji": "👥", "desc": "조직 내 사람들의 성장을 지원합니다", "salary": "★★★★☆"},
-            {"title": "방송인·MC", "emoji": "🎤", "desc": "따뜻한 에너지로 대중과 소통합니다", "salary": "★★★★☆"},
-            {"title": "코치·멘토", "emoji": "🏆", "desc": "개인의 목표 달성을 옆에서 도웁니다", "salary": "★★★★☆"},
-            {"title": "외교관", "emoji": "🌐", "desc": "국가 간 가교 역할을 수행합니다", "salary": "★★★★★"},
-        ],
-    },
-    "ENFP": {
-        "emoji": "🎉",
-        "nickname": "활동가",
-        "color": "#e91e63",
-        "light": "#fce4ec",
-        "desc": "열정적이고 창의적인 자유로운 영혼",
-        "jobs": [
-            {"title": "광고 크리에이터", "emoji": "🎯", "desc": "창의적인 캠페인으로 감동을 줍니다", "salary": "★★★★☆"},
-            {"title": "배우·연기자", "emoji": "🎭", "desc": "다양한 캐릭터를 통해 이야기를 전달합니다", "salary": "★★★☆☆"},
-            {"title": "이벤트 플래너", "emoji": "🎊", "desc": "특별한 순간을 기획하고 연출합니다", "salary": "★★★★☆"},
-            {"title": "유튜버·인플루언서", "emoji": "📱", "desc": "개성 있는 콘텐츠로 팔로워를 사로잡습니다", "salary": "★★★☆☆"},
-            {"title": "여행 작가", "emoji": "✈️", "desc": "세계를 누비며 경험을 글로 담습니다", "salary": "★★★☆☆"},
-        ],
-    },
-    "ISTJ": {
-        "emoji": "🏛️",
-        "nickname": "현실주의자",
-        "color": "#2c3e50",
-        "light": "#e8ecf0",
-        "desc": "철저하고 신뢰할 수 있는 관리자",
-        "jobs": [
-            {"title": "공무원·행정직", "emoji": "🏢", "desc": "체계적으로 공공 서비스를 운영합니다", "salary": "★★★★☆"},
-            {"title": "회계사", "emoji": "🧾", "desc": "정확한 수치로 재무를 관리합니다", "salary": "★★★★☆"},
-            {"title": "판사", "emoji": "⚖️", "desc": "법과 원칙에 따라 공정하게 판결합니다", "salary": "★★★★★"},
-            {"title": "의사·외과의", "emoji": "⚕️", "desc": "철저한 지식과 기술로 생명을 지킵니다", "salary": "★★★★★"},
-            {"title": "군인·경찰", "emoji": "🛡️", "desc": "원칙과 책임감으로 사회를 수호합니다", "salary": "★★★★☆"},
-        ],
-    },
-    "ISFJ": {
-        "emoji": "🌸",
-        "nickname": "수호자",
-        "color": "#27ae60",
-        "light": "#d5f5e3",
-        "desc": "헌신적이고 따뜻한 보호자",
-        "jobs": [
-            {"title": "간호사", "emoji": "💉", "desc": "환자 곁에서 섬세하게 돌봄을 제공합니다", "salary": "★★★★☆"},
-            {"title": "초등학교 교사", "emoji": "🍎", "desc": "아이들의 첫 배움을 함께합니다", "salary": "★★★☆☆"},
-            {"title": "영양사", "emoji": "🥗", "desc": "건강한 식습관을 설계하고 조언합니다", "salary": "★★★☆☆"},
-            {"title": "사회복지사", "emoji": "💛", "desc": "도움이 필요한 이들의 손을 잡아줍니다", "salary": "★★★☆☆"},
-            {"title": "비서·어시스턴트", "emoji": "📌", "desc": "꼼꼼함으로 조직을 든든히 지원합니다", "salary": "★★★☆☆"},
-        ],
-    },
-    "ESTJ": {
-        "emoji": "💼",
-        "nickname": "경영자",
-        "color": "#d35400",
-        "light": "#fde8d8",
-        "desc": "탁월한 관리 능력을 가진 경영자",
-        "jobs": [
-            {"title": "기업 임원", "emoji": "👔", "desc": "조직의 목표를 달성하는 강한 리더입니다", "salary": "★★★★★"},
-            {"title": "부동산 개발자", "emoji": "🏗️", "desc": "부동산을 분석하고 개발 전략을 세웁니다", "salary": "★★★★★"},
-            {"title": "군 장교", "emoji": "🎖️", "desc": "강한 리더십으로 부대를 이끕니다", "salary": "★★★★☆"},
-            {"title": "금융 분석가", "emoji": "📉", "desc": "시장을 분석해 투자 결정을 지원합니다", "salary": "★★★★★"},
-            {"title": "학교 교장", "emoji": "🎓", "desc": "학교 전체를 효율적으로 운영합니다", "salary": "★★★★☆"},
-        ],
-    },
-    "ESFJ": {
-        "emoji": "🤗",
-        "nickname": "집정관",
-        "color": "#8e44ad",
-        "light": "#f3e5f5",
-        "desc": "인기 많고 배려심 넘치는 사교가",
-        "jobs": [
-            {"title": "이벤트 코디네이터", "emoji": "🎀", "desc": "사람들이 행복한 순간을 만들어냅니다", "salary": "★★★★☆"},
-            {"title": "항공 승무원", "emoji": "✈️", "desc": "친절한 서비스로 편안한 여행을 만듭니다", "salary": "★★★★☆"},
-            {"title": "영업 매니저", "emoji": "🤝", "desc": "관계를 통해 신뢰를 쌓고 성과를 냅니다", "salary": "★★★★★"},
-            {"title": "웨딩 플래너", "emoji": "💍", "desc": "소중한 순간을 완벽하게 기획합니다", "salary": "★★★★☆"},
-            {"title": "홍보 담당자", "emoji": "📢", "desc": "브랜드 이미지를 따뜻하게 관리합니다", "salary": "★★★★☆"},
-        ],
-    },
-    "ISTP": {
-        "emoji": "🔧",
-        "nickname": "만능재주꾼",
-        "color": "#607d8b",
-        "light": "#eceff1",
-        "desc": "손재주 있고 냉정한 분석가",
-        "jobs": [
-            {"title": "항공 파일럿", "emoji": "🛩️", "desc": "침착하게 항공기를 조종합니다", "salary": "★★★★★"},
-            {"title": "기계 엔지니어", "emoji": "⚙️", "desc": "정교한 기계 시스템을 설계·제작합니다", "salary": "★★★★☆"},
-            {"title": "법의학자", "emoji": "🔬", "desc": "과학적 분석으로 사건의 실마리를 찾습니다", "salary": "★★★★☆"},
-            {"title": "운동선수", "emoji": "🏋️", "desc": "강인한 신체와 순발력을 발휘합니다", "salary": "★★★★☆"},
-            {"title": "IT 기술지원", "emoji": "🖥️", "desc": "기술 문제를 빠르고 정확하게 해결합니다", "salary": "★★★★☆"},
-        ],
-    },
-    "ISFP": {
+    "artist": {
+        "title": "🎨 아티스트형",
+        "sub": "세상을 아름답게 만드는 감성 충만 예술가!",
+        "color": "#FF8C42",
+        "bg": "#fff6f0",
         "emoji": "🎨",
-        "nickname": "모험가",
-        "color": "#00897b",
-        "light": "#e0f2f1",
-        "desc": "자유로운 영혼의 예술적 탐험가",
-        "jobs": [
-            {"title": "패션 디자이너", "emoji": "👗", "desc": "트렌드를 읽고 스타일을 창조합니다", "salary": "★★★★☆"},
-            {"title": "사진작가", "emoji": "📷", "desc": "순간의 아름다움을 영원히 담습니다", "salary": "★★★☆☆"},
-            {"title": "플로리스트", "emoji": "💐", "desc": "꽃으로 감동적인 공간을 연출합니다", "salary": "★★★☆☆"},
-            {"title": "요리사·셰프", "emoji": "👨‍🍳", "desc": "감각적인 요리로 미각을 자극합니다", "salary": "★★★★☆"},
-            {"title": "물리치료사", "emoji": "🏃", "desc": "몸의 회복을 섬세하게 도와드립니다", "salary": "★★★★☆"},
-        ],
+        "desc": "감각과 감성으로 세상을 표현하는 당신! 디자인·예술·패션 분야에서 당신만의 색깔을 마음껏 펼쳐봐요.",
+        "jobs": ["🖌️ 화가·일러스트레이터", "👗 패션 디자이너", "🏠 인테리어 디자이너", "📸 사진작가", "🎭 무대 예술가"],
+        "study": ["시각디자인", "미술·조형", "패션디자인"],
     },
-    "ESTP": {
-        "emoji": "⚡",
-        "nickname": "사업가",
-        "color": "#e64a19",
-        "light": "#fbe9e7",
-        "desc": "눈치 빠르고 에너지 넘치는 행동파",
-        "jobs": [
-            {"title": "기업가·사업가", "emoji": "💸", "desc": "빠른 판단력으로 사업 기회를 잡습니다", "salary": "★★★★★"},
-            {"title": "스포츠 코치", "emoji": "🏅", "desc": "선수의 잠재력을 극대화합니다", "salary": "★★★★☆"},
-            {"title": "경찰·형사", "emoji": "🔍", "desc": "현장에서 빠르게 상황을 파악합니다", "salary": "★★★★☆"},
-            {"title": "트레이더·딜러", "emoji": "📊", "desc": "실시간 시장에서 기민하게 거래합니다", "salary": "★★★★★"},
-            {"title": "응급구조사", "emoji": "🚑", "desc": "위기 상황에서 침착하게 생명을 구합니다", "salary": "★★★★☆"},
-        ],
+    "scientist": {
+        "title": "🔬 과학자형",
+        "sub": "세상의 원리를 파고드는 호기심 탐구자!",
+        "color": "#00C9A7",
+        "bg": "#edfff9",
+        "emoji": "🔬",
+        "desc": "왜?라는 질문을 멈추지 않는 당신! 자연과학·의학·공학에서 새로운 발견을 이뤄낼 거예요.",
+        "jobs": ["⚗️ 화학·생명과학 연구원", "🏥 의사·약사", "🌌 우주·물리학자", "🧬 유전공학자", "🤖 AI 연구원"],
+        "study": ["생명과학", "화학·물리", "의학·약학"],
     },
-    "ESFP": {
-        "emoji": "🌟",
-        "nickname": "연예인",
-        "color": "#f06292",
-        "light": "#fce4ec",
-        "desc": "즉흥적이고 에너지 넘치는 엔터테이너",
-        "jobs": [
-            {"title": "아이돌·연예인", "emoji": "🎤", "desc": "무대 위에서 빛나는 끼를 발산합니다", "salary": "★★★★★"},
-            {"title": "뷰티 크리에이터", "emoji": "💄", "desc": "트렌디한 뷰티 콘텐츠로 팬을 모읍니다", "salary": "★★★★☆"},
-            {"title": "파티 플래너", "emoji": "🎊", "desc": "신나고 즐거운 파티를 완벽히 기획합니다", "salary": "★★★★☆"},
-            {"title": "바리스타·바텐더", "emoji": "☕", "desc": "감각적인 드링크로 분위기를 만듭니다", "salary": "★★★☆☆"},
-            {"title": "소셜 미디어 매니저", "emoji": "📲", "desc": "트렌드에 맞는 콘텐츠로 팔로워를 늘립니다", "salary": "★★★★☆"},
-        ],
+    "adventurer": {
+        "title": "🧭 모험가형",
+        "sub": "늘 새로운 도전을 찾아 떠나는 행동파!",
+        "color": "#F7971E",
+        "bg": "#fff8ed",
+        "emoji": "🧭",
+        "desc": "가만히 앉아있기보다 직접 몸으로 부딪히는 걸 좋아하는 당신! 여행·스포츠·현장 직업이 잘 맞아요.",
+        "jobs": ["✈️ 파일럿·스튜어디스", "⚽ 프로 운동선수·코치", "🗺️ 여행 작가·여행 유튜버", "🚒 소방관·구조대원", "🌿 탐험가·트레킹 가이드"],
+        "study": ["체육학", "관광·항공학", "지리·환경학"],
+    },
+    "builder": {
+        "title": "🔨 빌더형",
+        "sub": "손으로 직접 만들고 완성하는 뚝딱이 장인!",
+        "color": "#8B5CF6",
+        "bg": "#f5f0ff",
+        "emoji": "🔨",
+        "desc": "계획하고 제작하고 완성하는 과정을 즐기는 당신! 건축·엔지니어링·IT 개발이 딱 맞아요.",
+        "jobs": ["🏗️ 건축가·토목 엔지니어", "💻 소프트웨어 개발자", "⚙️ 기계·자동차 엔지니어", "🔌 전기·전자 기술자", "🎮 게임 개발자"],
+        "study": ["건축학", "컴퓨터공학", "기계·전자공학"],
+    },
+    "performer": {
+        "title": "🎤 퍼포머형",
+        "sub": "무대 위에서 빛을 발하는 타고난 엔터테이너!",
+        "color": "#EC4899",
+        "bg": "#fff0f8",
+        "emoji": "🎤",
+        "desc": "사람들의 시선을 한 몸에 받고 에너지를 나누는 걸 즐기는 당신! 공연·방송·스포츠 분야가 딱이에요.",
+        "jobs": ["🎵 가수·뮤지션", "🎭 배우·연극인", "🎙️ MC·아나운서", "💃 댄서·안무가", "🤸 스포츠 선수"],
+        "study": ["연극·영화학", "실용음악", "체육·무용학"],
+    },
+    "counselor": {
+        "title": "💜 카운슬러형",
+        "sub": "마음을 읽고 치유하는 따뜻한 공감 전문가!",
+        "color": "#7C3AED",
+        "bg": "#f5f0ff",
+        "emoji": "💜",
+        "desc": "사람의 감정을 섬세하게 읽고 공감하는 능력이 탁월한 당신! 심리·상담·교육 분야에서 큰 역할을 해낼 거예요.",
+        "jobs": ["🧠 심리상담사·심리치료사", "👩‍⚕️ 정신건강 전문의", "📖 학교 상담교사", "🌱 코치·멘토", "🎓 특수교육 교사"],
+        "study": ["심리학", "교육학", "사회복지학"],
+    },
+    "techie": {
+        "title": "🤖 테키형",
+        "sub": "기술로 세상을 바꾸는 디지털 네이티브!",
+        "color": "#0EA5E9",
+        "bg": "#f0faff",
+        "emoji": "🤖",
+        "desc": "최신 기술에 눈이 반짝이고 코딩·게임이 재밌는 당신! IT·인공지능·사이버 분야가 딱 맞아요.",
+        "jobs": ["💻 개발자·프로그래머", "🔐 보안 전문가", "🤖 AI·머신러닝 엔지니어", "🎮 게임 기획자", "📡 네트워크 엔지니어"],
+        "study": ["컴퓨터공학", "AI·데이터사이언스", "정보보안학"],
+    },
+    "nature": {
+        "title": "🌿 네이처형",
+        "sub": "자연과 생명을 사랑하는 지구의 친구!",
+        "color": "#10B981",
+        "bg": "#edfff7",
+        "emoji": "🌿",
+        "desc": "동물, 식물, 환경에 관심이 많은 당신! 수의사·환경 연구·농업 바이오 등 생명과 연결된 직업이 잘 맞아요.",
+        "jobs": ["🐾 수의사·동물 훈련사", "🌾 농업 연구원·스마트팜 전문가", "♻️ 환경 컨설턴트", "🐋 해양 생물학자", "🌲 산림·조경 전문가"],
+        "study": ["수의학", "환경공학", "생명·농업과학"],
     },
 }
 
-MBTI_GROUPS = {
-    "🧠 분석가형": ["INTJ", "INTP", "ENTJ", "ENTP"],
-    "💚 외교관형": ["INFJ", "INFP", "ENFJ", "ENFP"],
-    "🛡️ 관리자형": ["ISTJ", "ISFJ", "ESTJ", "ESFJ"],
-    "🎯 탐험가형": ["ISTP", "ISFP", "ESTP", "ESFP"],
-}
-
-# ─── 스타일 ────────────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────
+# CSS
+# ──────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
 
-* { font-family: 'Noto Sans KR', sans-serif; box-sizing: border-box; }
+html, body, .stApp { font-family: 'Noto Sans KR', sans-serif; }
 
-/* 배경 */
 .stApp {
-    background: linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%);
+    background: linear-gradient(160deg, #fdf4ff 0%, #fef9ec 50%, #f0f9ff 100%);
     min-height: 100vh;
 }
 
-/* 기본 텍스트 */
-.stApp, .stApp * { color: #f0f0ff; }
+/* 공통 숨김 */
+#MainMenu, footer, header { visibility: hidden; }
+.block-container { padding-top: 1.5rem !important; max-width: 720px; }
 
-/* 히어로 헤더 */
-.hero-header {
+/* ── 히어로 ── */
+.hero {
     text-align: center;
-    padding: 3rem 1rem 2rem;
-    position: relative;
+    padding: 2.5rem 1rem 1.5rem;
+}
+.hero-emoji {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 0.4rem;
+    animation: bounce 2s infinite;
+}
+@keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
 }
 .hero-title {
-    font-size: 3.5rem;
+    font-size: 2.2rem;
     font-weight: 900;
-    background: linear-gradient(90deg, #a78bfa, #f472b6, #60a5fa, #34d399);
-    background-size: 300% 300%;
+    color: #3b1f6e;
+    line-height: 1.3;
+    margin: 0;
+}
+.hero-title span {
+    background: linear-gradient(90deg, #a855f7, #ec4899, #f97316);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: gradientShift 4s ease infinite;
-    line-height: 1.2;
-    margin: 0;
 }
 .hero-sub {
-    font-size: 1.15rem;
-    color: #c4b5fd;
-    margin-top: 0.8rem;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-}
-@keyframes gradientShift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* 구분선 */
-.fancy-divider {
-    height: 3px;
-    background: linear-gradient(90deg, transparent, #a78bfa, #f472b6, #60a5fa, transparent);
-    border: none;
-    margin: 1.5rem auto;
-    width: 60%;
-    border-radius: 99px;
-}
-
-/* 그룹 라벨 */
-.group-label {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #c4b5fd;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.5rem 0 0.3rem;
-    margin-bottom: 0.5rem;
-}
-
-/* MBTI 카드 버튼 */
-div[data-testid="column"] .stButton > button {
-    width: 100%;
-    border-radius: 18px;
-    padding: 1.1rem 0.5rem;
     font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    border: 2px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.06);
-    color: #f0f0ff;
-    letter-spacing: 0.05em;
-}
-div[data-testid="column"] .stButton > button:hover {
-    transform: translateY(-4px) scale(1.04);
-    border-color: rgba(167,139,250,0.7);
-    background: rgba(167,139,250,0.18);
-    box-shadow: 0 12px 40px rgba(167,139,250,0.35);
-    color: #fff;
-}
-div[data-testid="column"] .stButton > button:active {
-    transform: translateY(-1px) scale(1.01);
+    color: #7c5cbf;
+    margin-top: 0.5rem;
 }
 
-/* 선택된 MBTI 배너 */
-.selected-banner {
-    border-radius: 24px;
-    padding: 2rem 2.5rem;
-    text-align: center;
-    margin: 1.5rem 0;
-    position: relative;
-    overflow: hidden;
+/* ── 진행바 ── */
+.progress-wrap {
+    margin: 1rem 0 1.5rem;
 }
-.selected-banner::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(8px);
-}
-.selected-banner-inner { position: relative; z-index: 1; }
-.selected-banner-emoji { font-size: 4rem; display: block; margin-bottom: 0.3rem; }
-.selected-banner-name {
-    font-size: 2.8rem;
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 40px rgba(255,255,255,0.6);
-}
-.selected-banner-nick {
-    font-size: 1.3rem;
-    color: rgba(255,255,255,0.85);
-    margin-top: 0.2rem;
+.progress-label {
+    font-size: 0.85rem;
+    color: #9b7cc8;
+    text-align: right;
+    margin-bottom: 0.3rem;
     font-weight: 500;
 }
-.selected-banner-desc {
-    font-size: 1rem;
-    color: rgba(255,255,255,0.7);
-    margin-top: 0.5rem;
+.progress-bar-bg {
+    width: 100%;
+    height: 10px;
+    background: #e9d5ff;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #a855f7, #ec4899);
+    transition: width 0.4s ease;
 }
 
-/* 직업 카드 섹션 헤더 */
-.jobs-header {
-    font-size: 1.4rem;
+/* ── 질문 카드 ── */
+.q-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 1.8rem 2rem 1.5rem;
+    box-shadow: 0 4px 24px rgba(168,85,247,0.10);
+    border: 2px solid #f3e8ff;
+    margin-bottom: 1.2rem;
+}
+.q-number {
+    font-size: 0.78rem;
     font-weight: 700;
-    color: #e0d7ff;
-    margin: 1.5rem 0 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    color: #c084fc;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+.q-emoji { font-size: 2rem; display: block; margin-bottom: 0.3rem; }
+.q-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2d1b69;
+    line-height: 1.5;
 }
 
-/* 직업 카드 */
-.job-card {
-    border-radius: 18px;
-    padding: 1.4rem 1.6rem;
-    margin-bottom: 1rem;
-    background: rgba(255,255,255,0.06);
-    border: 1.5px solid rgba(255,255,255,0.12);
-    backdrop-filter: blur(12px);
-    transition: transform 0.2s, box-shadow 0.2s;
+/* ── 선택지 버튼 ── */
+div[data-testid="column"] .stButton > button,
+.stButton > button {
+    width: 100%;
+    border-radius: 16px !important;
+    padding: 0.85rem 1rem !important;
+    font-size: 0.97rem !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid #e9d5ff !important;
+    background: #fdf4ff !important;
+    color: #4a1d96 !important;
+    line-height: 1.45 !important;
+    white-space: pre-wrap !important;
+}
+div[data-testid="column"] .stButton > button:hover,
+.stButton > button:hover {
+    border-color: #a855f7 !important;
+    background: #f5e6ff !important;
+    transform: translateX(4px) scale(1.01);
+    box-shadow: 0 4px 16px rgba(168,85,247,0.18) !important;
+    color: #6b21a8 !important;
+}
+
+/* ── 결과 카드 ── */
+.result-outer {
+    border-radius: 28px;
+    padding: 2.2rem 2rem 1.8rem;
+    text-align: center;
+    margin: 0.5rem 0 1.5rem;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    border: 2.5px solid;
     position: relative;
     overflow: hidden;
 }
-.job-card::before {
-    content: '';
+.result-outer::after {
+    content: '✨';
     position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 5px;
-    border-radius: 99px 0 0 99px;
+    font-size: 7rem;
+    opacity: 0.06;
+    right: -1rem;
+    top: -1rem;
+    pointer-events: none;
 }
-.job-card:hover {
-    transform: translateX(6px);
-    box-shadow: 0 8px 32px rgba(167,139,250,0.2);
+.result-main-emoji { font-size: 4.5rem; display: block; margin-bottom: 0.3rem; }
+.result-title {
+    font-size: 1.9rem;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 0.3rem;
 }
-.job-card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin-bottom: 0.4rem;
+.result-sub {
+    font-size: 1rem;
+    font-weight: 600;
+    opacity: 0.85;
+    margin-bottom: 0.8rem;
 }
-.job-emoji { font-size: 1.8rem; }
-.job-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #f0f0ff;
-}
-.job-desc {
-    font-size: 0.9rem;
-    color: rgba(220,210,255,0.8);
-    margin-top: 0.3rem;
-    line-height: 1.5;
-}
-.job-salary {
-    margin-top: 0.5rem;
+.result-desc {
     font-size: 0.95rem;
-    color: #fbbf24;
+    line-height: 1.7;
+    opacity: 0.9;
+    background: rgba(255,255,255,0.55);
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
+    text-align: left;
+}
+
+/* ── 직업 태그 ── */
+.job-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.7);
+    border-radius: 99px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin: 0.25rem 0.2rem;
+}
+
+/* ── 추천 과목 ── */
+.study-box {
+    background: rgba(255,255,255,0.5);
+    border-radius: 14px;
+    padding: 0.7rem 1rem;
+    margin-top: 0.8rem;
+    font-size: 0.88rem;
+    text-align: left;
+}
+.study-label {
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+    margin-bottom: 0.3rem;
+}
+
+/* ── 다시하기 버튼 ── */
+.restart-btn .stButton > button {
+    background: linear-gradient(90deg, #a855f7, #ec4899) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 99px !important;
+    padding: 0.8rem 2.5rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 20px rgba(168,85,247,0.35) !important;
     letter-spacing: 0.03em;
 }
-
-/* 뒤로가기 버튼 */
-.stButton > button[kind="secondary"] {
-    background: rgba(255,255,255,0.08) !important;
-    border: 1.5px solid rgba(255,255,255,0.2) !important;
-    color: #c4b5fd !important;
-    border-radius: 12px !important;
-    padding: 0.5rem 1.2rem !important;
+.restart-btn .stButton > button:hover {
+    transform: scale(1.04) !important;
+    box-shadow: 0 6px 28px rgba(168,85,247,0.5) !important;
+    background: linear-gradient(90deg, #9333ea, #db2777) !important;
 }
 
-/* 통계 배지 */
-.stat-row {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
+/* ── 장식 구분선 ── */
+.deco-divider {
+    text-align: center;
+    color: #d8b4fe;
+    font-size: 1.1rem;
+    letter-spacing: 0.5rem;
     margin: 1rem 0;
 }
-.stat-badge {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 99px;
-    padding: 0.35rem 1rem;
-    font-size: 0.85rem;
-    color: #c4b5fd;
-}
-
-/* 제거: Streamlit 기본 UI 요소 */
-#MainMenu, footer, header { visibility: hidden; }
-.block-container { padding-top: 0 !important; max-width: 900px; }
-div[data-testid="stDecoration"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
-# ─── 상태 초기화 ───────────────────────────────────────────────────────────────
-if "selected_mbti" not in st.session_state:
-    st.session_state.selected_mbti = None
+# ──────────────────────────────────────────────
+# 상태 초기화
+# ──────────────────────────────────────────────
+if "step" not in st.session_state:
+    st.session_state.step = 0          # 0 = 시작 화면, 1~7 = 질문, 8 = 결과
+if "scores" not in st.session_state:
+    st.session_state.scores = {k: 0 for k in RESULTS}
+if "answers" not in st.session_state:
+    st.session_state.answers = []
 
-# ─── 히어로 헤더 ───────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="hero-header">
-  <p class="hero-title">🔮 MBTI 직업 탐험대</p>
-  <p class="hero-sub">✨ 나의 성격 유형에 맞는 꿈의 직업을 발견해보세요! ✨</p>
-</div>
-<hr class="fancy-divider"/>
-""", unsafe_allow_html=True)
+def reset():
+    st.session_state.step = 0
+    st.session_state.scores = {k: 0 for k in RESULTS}
+    st.session_state.answers = []
 
-# ─── 결과 화면 ─────────────────────────────────────────────────────────────────
-if st.session_state.selected_mbti:
-    key  = st.session_state.selected_mbti
-    data = MBTI_DATA[key]
-    color = data["color"]
-    light = data["light"]
+def answer(choice_scores):
+    for k, v in choice_scores.items():
+        st.session_state.scores[k] += v
+    st.session_state.step += 1
+    st.rerun()
 
-    # 뒤로가기
-    if st.button("← 다시 선택하기"):
-        st.session_state.selected_mbti = None
-        st.rerun()
+# ──────────────────────────────────────────────
+# 화면 렌더링
+# ──────────────────────────────────────────────
 
-    # 선택된 MBTI 배너
-    st.markdown(f"""
-    <div class="selected-banner" style="background: linear-gradient(135deg, {color}cc, {color}44); border: 2px solid {color}88;">
-      <div class="selected-banner-inner">
-        <span class="selected-banner-emoji">{data['emoji']}</span>
-        <div class="selected-banner-name">{key}</div>
-        <div class="selected-banner-nick">💫 {data['nickname']} 💫</div>
-        <div class="selected-banner-desc">🌟 {data['desc']}</div>
-      </div>
-    </div>
-    <div class="stat-row">
-      <span class="stat-badge">🎯 추천 직업 {len(data['jobs'])}가지</span>
-      <span class="stat-badge">💡 성격 기반 매칭</span>
-      <span class="stat-badge">🚀 진로 탐색 완료</span>
+# ── 시작 화면 ──
+if st.session_state.step == 0:
+    st.markdown("""
+    <div class="hero">
+      <span class="hero-emoji">🧸</span>
+      <p class="hero-title">나의 직업 유형은<br/><span>뭘까요?</span></p>
+      <p class="hero-sub">✨ 7가지 질문으로 찾는 나만의 진로 유형 ✨</p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="jobs-header">🏆 추천 직업 Top 5</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="background:#fff; border-radius:20px; padding:1.2rem 1.5rem;
+                border:2px solid #f3e8ff; box-shadow:0 2px 16px rgba(168,85,247,0.08);
+                margin-bottom:1.5rem;">
+      <div style="font-size:0.88rem; color:#7c5cbf; line-height:1.8;">
+        🌟 &nbsp;총 <b>7개</b> 질문, <b>3분</b>이면 완료!<br/>
+        💡 &nbsp;<b>12가지</b> 직업 유형 중 나에게 맞는 유형 발견<br/>
+        📚 &nbsp;추천 직업 + 관련 공부 분야까지 알려드려요<br/>
+        🎯 &nbsp;고등학생의 진로 탐색을 위해 만들어졌어요
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    accent_colors = ["#a78bfa", "#f472b6", "#60a5fa", "#34d399", "#fbbf24"]
-    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+    st.markdown('<div style="text-align:center;">', unsafe_allow_html=True)
+    if st.button("🚀  테스트 시작하기!", use_container_width=True):
+        st.session_state.step = 1
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    for i, job in enumerate(data["jobs"]):
-        acc = accent_colors[i % len(accent_colors)]
+    st.markdown("""
+    <div class="deco-divider">· · · · ·</div>
+    <div style="text-align:center; font-size:0.8rem; color:#c4b5fd; padding-bottom:1.5rem;">
+      결과는 참고용이에요 🌈 가장 중요한 건 나의 열정과 노력이랍니다!
+    </div>
+    """, unsafe_allow_html=True)
+
+# ── 질문 화면 (1~7) ──
+elif 1 <= st.session_state.step <= len(QUESTIONS):
+    idx = st.session_state.step - 1
+    q = QUESTIONS[idx]
+    total = len(QUESTIONS)
+    pct = int((idx / total) * 100)
+
+    # 진행바
+    st.markdown(f"""
+    <div class="progress-wrap">
+      <div class="progress-label">질문 {idx+1} / {total}</div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width:{pct}%"></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 질문 카드
+    st.markdown(f"""
+    <div class="q-card">
+      <div class="q-number">Q{idx+1}</div>
+      <span class="q-emoji">{q['emoji']}</span>
+      <div class="q-text">{q['q']}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 선택지
+    for label, scores in q["choices"]:
+        if st.button(label, key=f"q{idx}_{label[:6]}", use_container_width=True):
+            answer(scores)
+
+    st.markdown(f"""
+    <div style="text-align:center; font-size:0.8rem; color:#c084fc; margin-top:1rem; padding-bottom:1rem;">
+      {'⬤ ' * (idx+1)}{'○ ' * (total - idx - 1)}
+    </div>
+    """, unsafe_allow_html=True)
+
+# ── 결과 화면 ──
+elif st.session_state.step > len(QUESTIONS):
+    top_key = max(st.session_state.scores, key=lambda k: st.session_state.scores[k])
+    r = RESULTS[top_key]
+    c = r["color"]
+
+    st.markdown(f"""
+    <div style="text-align:center; font-size:1rem; color:#9b7cc8;
+                font-weight:600; margin-bottom:0.8rem;">
+      🎉 결과가 나왔어요! 🎉
+    </div>
+    <div class="result-outer" style="background:{r['bg']}; border-color:{c}66; color:{c};">
+      <span class="result-main-emoji">{r['emoji']}</span>
+      <div class="result-title" style="color:{c};">{r['title']}</div>
+      <div class="result-sub">{r['sub']}</div>
+      <div class="result-desc" style="color:#3b1f6e;">{r['desc']}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 추천 직업
+    st.markdown(f"""
+    <div style="background:#fff; border-radius:20px; padding:1.2rem 1.5rem;
+                border:2px solid {c}44; margin-bottom:1rem;">
+      <div style="font-size:0.85rem; font-weight:700; color:{c};
+                  letter-spacing:0.05em; margin-bottom:0.6rem;">
+        💼  추천 직업
+      </div>
+      <div>
+    """, unsafe_allow_html=True)
+
+    tags_html = "".join(
+        f'<span class="job-tag" style="color:{c}; border:1.5px solid {c}44;">{j}</span>'
+        for j in r["jobs"]
+    )
+    st.markdown(f"""
+      {tags_html}
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 추천 공부 분야
+    study_tags = " &nbsp;·&nbsp; ".join(r["study"])
+    st.markdown(f"""
+    <div style="background:#fff; border-radius:20px; padding:1.2rem 1.5rem;
+                border:2px solid {c}44; margin-bottom:1.5rem;">
+      <div style="font-size:0.85rem; font-weight:700; color:{c};
+                  letter-spacing:0.05em; margin-bottom:0.4rem;">
+        📚  관련 공부 분야
+      </div>
+      <div style="font-size:0.93rem; color:#4a1d96; font-weight:500;">
+        {study_tags}
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 전체 점수 (상위 3개)
+    sorted_scores = sorted(st.session_state.scores.items(), key=lambda x: x[1], reverse=True)
+    top3 = sorted_scores[:3]
+    st.markdown("""
+    <div style="font-size:0.85rem; font-weight:700; color:#9b7cc8;
+                letter-spacing:0.05em; margin-bottom:0.5rem;">
+      📊  나의 TOP 3 유형
+    </div>
+    """, unsafe_allow_html=True)
+
+    for rank, (key, score) in enumerate(top3):
+        rv = RESULTS[key]
+        medals = ["🥇", "🥈", "🥉"]
+        bar_w = int((score / (top3[0][1] + 0.01)) * 100)
         st.markdown(f"""
-        <div class="job-card" style="border-color: {acc}44;">
-          <div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:{acc};border-radius:99px 0 0 99px;"></div>
-          <div class="job-card-header">
-            <span class="job-emoji">{job['emoji']}</span>
-            <div>
-              <div class="job-title">{medals[i]} {job['title']}</div>
+        <div style="display:flex; align-items:center; gap:0.7rem;
+                    margin-bottom:0.5rem; background:#fff;
+                    border-radius:14px; padding:0.6rem 1rem;
+                    border:1.5px solid #f3e8ff;">
+          <span style="font-size:1.2rem;">{medals[rank]}</span>
+          <span style="font-size:1.1rem;">{rv['emoji']}</span>
+          <div style="flex:1;">
+            <div style="font-size:0.88rem; font-weight:700;
+                        color:#4a1d96;">{rv['title']}</div>
+            <div style="height:6px; background:#f3e8ff; border-radius:99px;
+                        margin-top:4px; overflow:hidden;">
+              <div style="height:100%; width:{bar_w}%;
+                          background:linear-gradient(90deg,{rv['color']},{rv['color']}99);
+                          border-radius:99px;"></div>
             </div>
           </div>
-          <div class="job-desc">📌 {job['desc']}</div>
-          <div class="job-salary">💰 연봉 수준 &nbsp; {job['salary']}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <hr class="fancy-divider" style="margin:2rem auto;"/>
-    <div style="text-align:center; color:#a78bfa; font-size:0.95rem; padding-bottom:2rem;">
-      🌟 더 자세한 직업 정보는 <b>커리어넷</b>이나 <b>워크넷</b>에서 탐색해보세요! 🌟<br/>
-      <span style="color:#c4b5fd; font-size:0.85rem; display:block; margin-top:0.5rem;">
-        💡 MBTI는 참고 지표일 뿐, 가장 중요한 건 나의 열정과 노력이에요! 💪
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ─── MBTI 선택 화면 ────────────────────────────────────────────────────────────
-else:
-    st.markdown("""
-    <div style="text-align:center; font-size:1.1rem; color:#c4b5fd; margin-bottom:1.5rem;">
-      👇 아래에서 나의 MBTI를 선택해보세요!
-    </div>
-    """, unsafe_allow_html=True)
-
-    for group_name, mbti_list in MBTI_GROUPS.items():
-        st.markdown(f'<div class="group-label">{group_name}</div>', unsafe_allow_html=True)
-        cols = st.columns(4)
-        for j, mbti in enumerate(mbti_list):
-            d = MBTI_DATA[mbti]
-            with cols[j]:
-                label = f"{d['emoji']}\n{mbti}\n{d['nickname']}"
-                if st.button(label, key=f"btn_{mbti}", use_container_width=True):
-                    st.session_state.selected_mbti = mbti
-                    st.rerun()
-        st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.markdown('<div class="restart-btn">', unsafe_allow_html=True)
+    if st.button("🔄  다시 테스트하기", use_container_width=True):
+        reset()
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("""
-    <hr class="fancy-divider" style="margin:2rem auto;"/>
-    <div style="text-align:center; padding-bottom:2rem;">
-      <div style="font-size:1rem; color:#a78bfa; font-weight:600; margin-bottom:0.5rem;">
-        🎓 이 서비스는 진로 교육을 위한 참고 자료입니다
-      </div>
-      <div style="font-size:0.85rem; color:rgba(196,181,253,0.65);">
-        16가지 MBTI 유형 × 각 5개 추천 직업 = 80가지 진로 탐색 🗺️
-      </div>
+    <div class="deco-divider">· · · · ·</div>
+    <div style="text-align:center; font-size:0.8rem; color:#c4b5fd; padding-bottom:2rem;">
+      결과는 참고용이에요 🌈 어떤 유형이든 노력하면 꿈을 이룰 수 있어요! 💪
     </div>
     """, unsafe_allow_html=True)
