@@ -665,63 +665,40 @@ elif st.session_state.step > len(QUESTIONS):
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("""
-    <div class="deco-divider">· · · · ·</div>
+    st.markdown('<div class="deco-divider">· · · · ·</div>', unsafe_allow_html=True)
 
-    <!-- 진로 탐색 안내 박스 -->
-    <div style="background: linear-gradient(135deg, #fdf4ff, #fef9ec);
-                border-radius: 20px; padding: 1.4rem 1.6rem;
-                border: 2px solid #e9d5ff; margin-bottom: 1rem;">
-      <div style="font-size:0.95rem; font-weight:800; color:#7c3aed; margin-bottom:0.8rem;">
+    st.markdown("""
+    <div style="background:#fdf4ff; border-radius:20px; padding:1.4rem 1.6rem;
+                border:2px solid #e9d5ff; margin-bottom:1rem;">
+      <div style="font-size:0.95rem; font-weight:800; color:#7c3aed; margin-bottom:0.6rem;">
         🔎 더 깊이 탐색하고 싶다면?
       </div>
-      <div style="font-size:0.88rem; color:#4a1d96; line-height:2;">
-        이 테스트는 <b>간단한 참고용</b>이에요!<br/>
-        진짜 나에게 맞는 직업·학과를 찾으려면 아래 공식 사이트에서
-        <b>전문 검사</b>를 꼭 받아보세요 🌟
-      </div>
-      <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.55rem;">
-
-        <div style="background:#fff; border-radius:14px; padding:0.7rem 1rem;
-                    border:1.5px solid #e9d5ff; display:flex; align-items:center; gap:0.7rem;">
-          <span style="font-size:1.4rem;">🎓</span>
-          <div>
-            <div style="font-size:0.9rem; font-weight:700; color:#6d28d9;">커리어넷 (진로정보망)</div>
-            <div style="font-size:0.8rem; color:#7c5cbf; margin-top:0.1rem;">
-              직업·학과 탐색 + 무료 직업흥미검사 제공<br/>
-              <b>www.career.go.kr</b>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:#fff; border-radius:14px; padding:0.7rem 1rem;
-                    border:1.5px solid #e9d5ff; display:flex; align-items:center; gap:0.7rem;">
-          <span style="font-size:1.4rem;">💼</span>
-          <div>
-            <div style="font-size:0.9rem; font-weight:700; color:#6d28d9;">워크넷 (고용노동부)</div>
-            <div style="font-size:0.8rem; color:#7c5cbf; margin-top:0.1rem;">
-              직업심리검사 + 직업·채용 정보 탐색<br/>
-              <b>www.work.go.kr</b>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:#fff; border-radius:14px; padding:0.7rem 1rem;
-                    border:1.5px solid #e9d5ff; display:flex; align-items:center; gap:0.7rem;">
-          <span style="font-size:1.4rem;">🏫</span>
-          <div>
-            <div style="font-size:0.9rem; font-weight:700; color:#6d28d9;">학교 진로 선생님</div>
-            <div style="font-size:0.8rem; color:#7c5cbf; margin-top:0.1rem;">
-              학교 진로상담실에서 1:1 상담을 받아보세요!<br/>
-              나만을 위한 맞춤 진로 조언을 해 주실 거예요 🌸
-            </div>
-          </div>
-        </div>
-
+      <div style="font-size:0.88rem; color:#4a1d96; line-height:1.9; margin-bottom:1rem;">
+        이 테스트는 <b>간단한 참고용</b>이에요! 진짜 나에게 맞는 직업·학과를 찾으려면
+        아래 공식 사이트에서 <b>전문 검사</b>를 꼭 받아보세요 🌟
       </div>
     </div>
+    """, unsafe_allow_html=True)
 
-    <div style="text-align:center; font-size:0.8rem; color:#c4b5fd; padding-bottom:2rem; margin-top:0.5rem;">
+    for icon, title, desc, url in [
+        ("🎓", "커리어넷 (진로정보망)", "직업·학과 탐색 + 무료 직업흥미검사 제공", "www.career.go.kr"),
+        ("💼", "워크넷 (고용노동부)",   "직업심리검사 + 직업·채용 정보 탐색",       "www.work.go.kr"),
+        ("🏫", "학교 진로 선생님",      "진로상담실에서 1:1 맞춤 상담을 받아보세요 🌸", ""),
+    ]:
+        url_line = f"<div style='font-size:0.8rem; color:#a78bfa; margin-top:0.2rem;'><b>{url}</b></div>" if url else ""
+        st.markdown(f"""
+        <div style="background:#fff; border-radius:14px; padding:0.85rem 1.1rem;
+                    border:1.5px solid #e9d5ff; margin-bottom:0.5rem;">
+          <div style="font-size:1.3rem; margin-bottom:0.3rem;">{icon}</div>
+          <div style="font-size:0.9rem; font-weight:700; color:#6d28d9;">{title}</div>
+          <div style="font-size:0.82rem; color:#7c5cbf; margin-top:0.2rem; line-height:1.6;">{desc}</div>
+          {url_line}
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="text-align:center; font-size:0.8rem; color:#c4b5fd;
+                padding-bottom:2rem; margin-top:0.8rem;">
       결과는 참고용이에요 🌈 어떤 유형이든 노력하면 꿈을 이룰 수 있어요! 💪
     </div>
     """, unsafe_allow_html=True)
