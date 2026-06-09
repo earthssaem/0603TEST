@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 # ──────────────────────────────────────────────
-# 데이터: 질문 (7개)
+# 데이터: 질문 (10개)
 # 각 보기에 직업 유형별 점수 부여
 # 유형: creator / helper / analyst / leader /
 #       artist / scientist / adventurer / builder /
@@ -83,6 +83,36 @@ QUESTIONS = [
             ("운동하거나 밖에 나가서 몸 쓰기 🏃",           {"adventurer":3, "nature":2, "builder":2}),
             ("게임, 코딩, 퍼즐 같은 두뇌 활동 🎮",          {"techie":3, "analyst":2, "scientist":1}),
             ("친구 만나거나 수다 떨기 🧋",                  {"performer":3, "helper":2, "counselor":2}),
+        ],
+    },
+    {
+        "q": "수업 시간 중 가장 집중이 잘 되는 과목은?",
+        "emoji": "📖",
+        "choices": [
+            ("국어·문학·미술처럼 표현하는 과목 🖊️",         {"creator":3, "artist":3, "counselor":1}),
+            ("수학·과학·정보처럼 논리적인 과목 🔢",          {"analyst":3, "scientist":2, "techie":3}),
+            ("사회·역사·경제처럼 세상을 이해하는 과목 🌍",   {"leader":3, "analyst":2, "adventurer":1}),
+            ("체육·음악·연극처럼 몸과 감각을 쓰는 과목 🎶",  {"performer":3, "adventurer":2, "artist":2}),
+        ],
+    },
+    {
+        "q": "내가 정말 싫어하는 상황은?",
+        "emoji": "😤",
+        "choices": [
+            ("똑같은 일을 반복해야 할 때 😩",               {"creator":3, "adventurer":3, "performer":1}),
+            ("혼자서 모든 걸 결정해야 할 때 😰",             {"helper":3, "counselor":2, "artist":1}),
+            ("감정적으로 대화해야 할 때 😶",                 {"analyst":3, "techie":3, "scientist":2}),
+            ("계획 없이 즉흥적으로 움직여야 할 때 😵",       {"builder":3, "leader":2, "analyst":1}),
+        ],
+    },
+    {
+        "q": "내가 만약 학교 행사를 기획한다면?",
+        "emoji": "🎪",
+        "choices": [
+            ("영상·포스터·굿즈 제작 담당 🎨",               {"creator":3, "artist":3, "techie":1}),
+            ("전체 일정·예산 총괄 진행 담당 📊",             {"leader":3, "analyst":2, "builder":2}),
+            ("참여자 케어, 분위기 살리기 담당 🌸",           {"helper":3, "counselor":3, "performer":1}),
+            ("무대·공연·이벤트 아이디어 담당 🎭",            {"performer":3, "adventurer":2, "creator":2}),
         ],
     },
 ]
@@ -472,7 +502,7 @@ if st.session_state.step == 0:
     <div class="hero">
       <span class="hero-emoji">🧸</span>
       <p class="hero-title">나의 직업 유형은<br/><span>뭘까요?</span></p>
-      <p class="hero-sub">✨ 7가지 질문으로 찾는 나만의 진로 유형 ✨</p>
+      <p class="hero-sub">✨ 10가지 질문으로 찾는 나만의 진로 유형 ✨</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -481,7 +511,7 @@ if st.session_state.step == 0:
                 border:2px solid #f3e8ff; box-shadow:0 2px 16px rgba(168,85,247,0.08);
                 margin-bottom:1.5rem;">
       <div style="font-size:0.88rem; color:#7c5cbf; line-height:1.8;">
-        🌟 &nbsp;총 <b>7개</b> 질문, <b>3분</b>이면 완료!<br/>
+        🌟 &nbsp;총 <b>10개</b> 질문, <b>5분</b>이면 완료!<br/>
         💡 &nbsp;<b>12가지</b> 직업 유형 중 나에게 맞는 유형 발견<br/>
         📚 &nbsp;추천 직업 + 관련 공부 분야까지 알려드려요<br/>
         🎯 &nbsp;고등학생의 진로 탐색을 위해 만들어졌어요
@@ -637,7 +667,61 @@ elif st.session_state.step > len(QUESTIONS):
 
     st.markdown("""
     <div class="deco-divider">· · · · ·</div>
-    <div style="text-align:center; font-size:0.8rem; color:#c4b5fd; padding-bottom:2rem;">
+
+    <!-- 진로 탐색 안내 박스 -->
+    <div style="background: linear-gradient(135deg, #fdf4ff, #fef9ec);
+                border-radius: 20px; padding: 1.4rem 1.6rem;
+                border: 2px solid #e9d5ff; margin-bottom: 1rem;">
+      <div style="font-size:0.95rem; font-weight:800; color:#7c3aed; margin-bottom:0.8rem;">
+        🔎 더 깊이 탐색하고 싶다면?
+      </div>
+      <div style="font-size:0.88rem; color:#4a1d96; line-height:2;">
+        이 테스트는 <b>간단한 참고용</b>이에요!<br/>
+        진짜 나에게 맞는 직업·학과를 찾으려면 아래 공식 사이트에서
+        <b>전문 검사</b>를 꼭 받아보세요 🌟
+      </div>
+      <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.55rem;">
+
+        <div style="background:#fff; border-radius:14px; padding:0.7rem 1rem;
+                    border:1.5px solid #e9d5ff; display:flex; align-items:center; gap:0.7rem;">
+          <span style="font-size:1.4rem;">🎓</span>
+          <div>
+            <div style="font-size:0.9rem; font-weight:700; color:#6d28d9;">커리어넷 (진로정보망)</div>
+            <div style="font-size:0.8rem; color:#7c5cbf; margin-top:0.1rem;">
+              직업·학과 탐색 + 무료 직업흥미검사 제공<br/>
+              <b>www.career.go.kr</b>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fff; border-radius:14px; padding:0.7rem 1rem;
+                    border:1.5px solid #e9d5ff; display:flex; align-items:center; gap:0.7rem;">
+          <span style="font-size:1.4rem;">💼</span>
+          <div>
+            <div style="font-size:0.9rem; font-weight:700; color:#6d28d9;">워크넷 (고용노동부)</div>
+            <div style="font-size:0.8rem; color:#7c5cbf; margin-top:0.1rem;">
+              직업심리검사 + 직업·채용 정보 탐색<br/>
+              <b>www.work.go.kr</b>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fff; border-radius:14px; padding:0.7rem 1rem;
+                    border:1.5px solid #e9d5ff; display:flex; align-items:center; gap:0.7rem;">
+          <span style="font-size:1.4rem;">🏫</span>
+          <div>
+            <div style="font-size:0.9rem; font-weight:700; color:#6d28d9;">학교 진로 선생님</div>
+            <div style="font-size:0.8rem; color:#7c5cbf; margin-top:0.1rem;">
+              학교 진로상담실에서 1:1 상담을 받아보세요!<br/>
+              나만을 위한 맞춤 진로 조언을 해 주실 거예요 🌸
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="text-align:center; font-size:0.8rem; color:#c4b5fd; padding-bottom:2rem; margin-top:0.5rem;">
       결과는 참고용이에요 🌈 어떤 유형이든 노력하면 꿈을 이룰 수 있어요! 💪
     </div>
     """, unsafe_allow_html=True)
